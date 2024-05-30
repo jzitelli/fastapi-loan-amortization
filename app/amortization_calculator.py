@@ -3,6 +3,8 @@ def calc_monthly_payment(principal_amount, annual_interest_rate, number_of_month
     P = principal_amount
     i = annual_interest_rate / 12
     n = number_of_months
+    if i == 0:
+        return P / n
     return P * (i + i / ((1 + i)**n - 1))
 
 
@@ -11,7 +13,7 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
     i = annual_interest_rate / 12
     balance = principal_amount
     result = []
-    for n in range(number_of_months):
+    for _ in range(number_of_months):
         monthly_accrued_interest = balance * i
         principal_payment = A - monthly_accrued_interest
         balance -= principal_payment
