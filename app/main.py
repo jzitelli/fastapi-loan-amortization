@@ -14,7 +14,7 @@ def create_loan():
     pass
 
 
-@app.get("/loans/{loan_id}")
+@app.get("/loans/{loan_id}/schedule")
 def fetch_loan_schedule(loan_id: str):
     pass
 
