@@ -5,14 +5,7 @@ from fastapi.encoders import jsonable_encoder
 
 from app import crud
 from app.models import User, UserCreate, Loan, LoanCreate
-
-
-def random_lower_string() -> str:
-    return "".join(random.choices(string.ascii_lowercase, k=32))
-
-
-def random_email() -> str:
-    return f"{random_lower_string()}@{random_lower_string()}.com"
+from app.tests.utils.utils import random_email, random_lower_string
 
 
 def test_create_user(db: Session) -> None:
