@@ -1,5 +1,6 @@
 from sqlmodel import Session, select
-from app.models import User, UserCreate
+
+from app.models import User, UserCreate, Loan, LoanCreate
 from app.security import get_password_hash, verify_password
 
 
@@ -26,3 +27,11 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
+
+def create_loan(*, session: Session, loan_in: LoanCreate, owner_id: int) -> Loan:
+    db_item = Loan.model_validate(loan_in, update={"owner_id": owner_id})
+    session.add(db_item)
+    session.commit()
+    session.refresh(db_item)
+    return db_item

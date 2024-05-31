@@ -4,7 +4,7 @@ from sqlmodel import Session
 from fastapi.encoders import jsonable_encoder
 
 from app import crud
-from app.models import User, UserCreate
+from app.models import User, UserCreate, Loan, LoanCreate
 
 
 def random_lower_string() -> str:
@@ -84,16 +84,11 @@ def test_get_user(db: Session) -> None:
     assert jsonable_encoder(user) == jsonable_encoder(user_2)
 
 
-# def test_update_user(db: Session) -> None:
-#     password = random_lower_string()
-#     email = random_email()
-#     user_in = UserCreate(email=email, password=password, is_superuser=True)
-#     user = crud.create_user(session=db, user_create=user_in)
-#     new_password = random_lower_string()
-#     user_in_update = UserUpdate(password=new_password, is_superuser=True)
-#     if user.id is not None:
-#         crud.update_user(session=db, db_user=user, user_in=user_in_update)
-#     user_2 = db.get(User, user.id)
-#     assert user_2
-#     assert user.email == user_2.email
-#     assert verify_password(new_password, user_2.hashed_password)
+def test_create_loan(db):
+    user = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
+    loan_in = LoanCreate(amount='200000.00', annual_interest_rate='0.05', loan_term=30*12)
+    loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=user.id)
+    assert loan.amount == loan_in.amount
+    assert loan.annual_interest_rate == loan_in.annual_interest_rate
+    assert loan.loan_term == loan_in.loan_term
+    assert loan.owner_id == user.id

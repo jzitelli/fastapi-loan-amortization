@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.config import settings
-from app.models import User, UserCreate
+from app.models import User, UserCreate, Loan
 
 engine = create_engine("sqlite:///database.db")
 

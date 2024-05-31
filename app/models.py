@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 # Shared properties
@@ -19,3 +19,20 @@ class UserCreate(UserBase):
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
+    loans: list["Loan"] = Relationship(back_populates="owner")
+
+
+class LoanBase(SQLModel):
+    amount: float
+    annual_interest_rate: float
+    loan_term: int
+
+
+class LoanCreate(LoanBase):
+    pass
+
+
+class Loan(LoanBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
+    owner: User | None = Relationship(back_populates="loans")
