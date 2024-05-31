@@ -1,2 +1,6 @@
 fastapi
 pytest
+sqlmodel
+pydantic-settings
+passlib
+bcrypt
