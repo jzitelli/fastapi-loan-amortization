@@ -85,10 +85,9 @@ def test_get_user(db: Session) -> None:
 
 
 def test_create_loan(db):
-    user = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
     loan_in = LoanCreate(amount='200000.00', annual_interest_rate='0.05', loan_term=30*12)
-    loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=user.id)
+    loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=400)
     assert loan.amount == loan_in.amount
     assert loan.annual_interest_rate == loan_in.annual_interest_rate
     assert loan.loan_term == loan_in.loan_term
-    assert loan.owner_id == user.id
+    assert loan.owner_id == 400
