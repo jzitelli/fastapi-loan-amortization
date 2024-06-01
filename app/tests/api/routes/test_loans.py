@@ -38,26 +38,27 @@ def test_fetch_loan_schedule(client: TestClient, superuser_token_headers: dict[s
     assert all(set(r.keys()) == set(expected_keys) for r in content)
 
 
-# def test_read_item_not_found(
-#     client: TestClient, superuser_token_headers: dict[str, str]
-# ) -> None:
-#     response = client.get(
-#         f"{settings.API_V1_STR}/items/999",
-#         headers=superuser_token_headers,
-#     )
-#     assert response.status_code == 404
-#     content = response.json()
-#     assert content["detail"] == "Item not found"
-#
-#
-# def test_read_item_not_enough_permissions(
-#     client: TestClient, normal_user_token_headers: dict[str, str], db: Session
-# ) -> None:
-#     item = create_random_item(db)
-#     response = client.get(
-#         f"{settings.API_V1_STR}/items/{item.id}",
-#         headers=normal_user_token_headers,
-#     )
-#     assert response.status_code == 400
-#     content = response.json()
-#     assert content["detail"] == "Not enough permissions"
+def test_fetch_loan_schedule_loan_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    non_existing_loan_id = 999999
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{non_existing_loan_id}/schedule",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Loan not found"
+
+
+def test_fetch_loan_schedule_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    loan = create_loan(db, amount=10, annual_interest_rate=0, loan_term=12)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/schedule",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 400
+    content = response.json()
+    assert content["detail"] == "Not enough permissions"
