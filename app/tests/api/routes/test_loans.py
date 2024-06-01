@@ -2,6 +2,7 @@ from sqlmodel import Session
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.tests.utils.loan import create_loan
 
 
 def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]):
@@ -24,21 +25,17 @@ def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]
 
 def test_fetch_loan_schedule(client: TestClient, superuser_token_headers: dict[str, str], db: Session):
     data = {"amount": "500000.00", "annual_interest_rate": "0.07", "loan_term": 30*12}
-    response = client.post(
-        f"{settings.API_V1_STR}/loans/",
-        headers=superuser_token_headers,
-        json=data,
-    )
-    assert response.status_code == 200
-    loan_id = response.json()['id']
+    loan = create_loan(db, **data)
     response = client.get(
-        f"{settings.API_V1_STR}/loans/{loan_id}/schedule",
+        f"{settings.API_V1_STR}/loans/{loan.id}/schedule",
         headers=superuser_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
     assert type(content) is list
     assert len(content) == data['loan_term']
+    expected_keys = ['month', 'remaining_balance', 'monthly_payment']
+    assert all(set(r.keys()) == set(expected_keys) for r in content)
 
 
 # def test_read_item_not_found(
