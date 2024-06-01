@@ -30,8 +30,6 @@ def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int)
     Get loan schedule by ID.
     """
     loan = session.get(Loan, id)
-    if not loan:
+    if not loan or (not current_user.is_superuser and (loan.owner_id != current_user.id)):
         raise HTTPException(status_code=404, detail="Loan not found")
-    if not current_user.is_superuser and (loan.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     return calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
