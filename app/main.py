@@ -10,11 +10,6 @@ app = FastAPI()
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-@app.post("/loans")
-def create_loan():
-    pass
-
-
 @app.get("/loans/{loan_id}/schedule")
 def fetch_loan_schedule(loan_id: str):
     pass

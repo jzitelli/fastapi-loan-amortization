@@ -43,6 +43,12 @@ class Loan(LoanBase, table=True):
     owner: User | None = Relationship(back_populates="loans")
 
 
+# Properties to return via API, id is always required
+class LoanPublic(LoanBase):
+    id: int
+    owner_id: int
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
