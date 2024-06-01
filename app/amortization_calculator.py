@@ -20,6 +20,7 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
         result.append({
             'month': n,
             'monthly_payment': A,
+            'monthly_accrued_interest': monthly_accrued_interest,
             'remaining_balance': balance
         })
     return result

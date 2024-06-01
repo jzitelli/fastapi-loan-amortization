@@ -1,3 +1,4 @@
+from pytest import approx
 from sqlmodel import Session
 from fastapi.testclient import TestClient
 
@@ -62,3 +63,18 @@ def test_fetch_loan_schedule_not_enough_permissions(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Loan not found"
+
+
+def test_fetch_loan_summary(client: TestClient, superuser_token_headers: dict[str, str], db: Session):
+    # test against default/calculated values from https://www.zillow.com/mortgage-calculator/amortization-schedule-calculator
+    data = {"amount": "200000.00", "annual_interest_rate": ".0657", "loan_term": 30*12}
+    loan = create_loan(db, **data)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month={data['loan_term']}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert abs(content['remaining_balance']) < 1e-8
+    assert content['aggregate_principal_paid'] == approx(float(data['amount']), abs=0.005)
+    assert content['aggregate_interest_paid'] == approx(258406, rel=1e-5)
