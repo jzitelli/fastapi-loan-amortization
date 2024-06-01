@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
 from app.models import User, UserCreate, Loan, LoanCreate
-from app.security import get_password_hash, verify_password
+from app.core.security import get_password_hash, verify_password
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:

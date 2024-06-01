@@ -22,6 +22,11 @@ class User(UserBase, table=True):
     loans: list["Loan"] = Relationship(back_populates="owner")
 
 
+# Properties to return via API, id is always required
+class UserPublic(UserBase):
+    id: int
+
+
 class LoanBase(SQLModel):
     amount: float
     annual_interest_rate: float
@@ -36,3 +41,14 @@ class Loan(LoanBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="loans")
+
+
+# JSON payload containing access token
+class Token(SQLModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+# Contents of JWT token
+class TokenPayload(SQLModel):
+    sub: int | None = None

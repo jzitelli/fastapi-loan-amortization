@@ -1,4 +1,4 @@
-from .amortization_calculator import calc_monthly_payment
+from app.amortization_calculator import calc_monthly_payment
 from pytest import approx
 
 def test_calc_monthly_payment():
