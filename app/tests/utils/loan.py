@@ -5,8 +5,9 @@ from app.models import Loan, LoanCreate
 from app.tests.utils.user import create_random_user
 
 
-def create_loan(db: Session, **kwargs) -> Loan:
-    user = create_random_user(db)
+def create_loan(db: Session, user=None, **kwargs) -> Loan:
+    if user is None:
+        user = create_random_user(db)
     owner_id = user.id
     assert owner_id is not None
     loan_in = LoanCreate(**kwargs)

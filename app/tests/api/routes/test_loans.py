@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.tests.utils.loan import create_loan
+from app.tests.utils.user import create_random_user, authentication_token_from_email
 
 
 def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]):
@@ -23,6 +24,24 @@ def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]
     assert content["loan_term"] == data["loan_term"]
     assert "id" in content
     assert "owner_id" in content
+
+
+def test_fetch_loans(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    user = create_random_user(db)
+    create_loan(db, user=user, amount=1, annual_interest_rate=0, loan_term=1)
+    create_loan(db, user=user, amount=2, annual_interest_rate=0, loan_term=2)
+    create_loan(db, user=user, amount=3, annual_interest_rate=0, loan_term=3)
+    create_loan(db,            amount=4, annual_interest_rate=0, loan_term=4)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/",
+        headers=authentication_token_from_email(client=client, email=user.email, db=db),
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content["data"]) == 3
+    assert {1,2,3} == set(r['loan_term'] for r in content['data'])
 
 
 def test_fetch_loan_schedule(client: TestClient, superuser_token_headers: dict[str, str], db: Session):

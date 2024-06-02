@@ -57,6 +57,11 @@ class LoanPublic(LoanBase):
     owner_id: int
 
 
+class LoansPublic(SQLModel):
+    data: list[LoanPublic]
+    count: int
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
