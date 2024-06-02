@@ -47,9 +47,10 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
 
 def calc_monthly_summary(principal_amount, annual_interest_rate, number_of_months, month):
     schedule = calc_amortization_schedule(principal_amount, annual_interest_rate, number_of_months)
+    month_row = schedule[month-1]
     return {
-        'remaining_balance': schedule[month-1]['remaining_balance'],
-        'aggregate_principal_paid': principal_amount - schedule[month-1]['remaining_balance'],
+        'remaining_balance': month_row['remaining_balance'],
+        'aggregate_principal_paid': principal_amount - month_row['remaining_balance'],
         'aggregate_interest_paid': sum(r['monthly_accrued_interest'] for r in schedule[:month])
     }
 

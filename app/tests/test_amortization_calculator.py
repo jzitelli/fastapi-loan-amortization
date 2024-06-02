@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from pytest import approx
 
 from app.amortization_calculator import calc_monthly_payment, calc_amortization_schedule, round_to_nearest_cent, calc_monthly_summary
@@ -23,12 +24,14 @@ def test_calc_monthly_payment_zero_interest():
 
 
 def test_calc_amortization_schedule():
+    "Example from https://www.investopedia.com/terms/a/amortization.asp#toc-example-of-amortization"
     schedule = calc_amortization_schedule(30000.0, 0.03, 48)
     assert 48 == len(schedule)
-    assert abs(schedule[-1]['remaining_balance']) < 1e-9
+    assert schedule[0]['monthly_accrued_interest'] == 75
+    assert schedule[-1]['remaining_balance'] == 0
 
 
 def test_calc_monthly_summary_last_month_principal_fully_paid():
-    principal_amount = 200000
+    principal_amount = 30000
     summary = calc_monthly_summary(principal_amount, 0.03, 48, 48)
     assert summary['aggregate_principal_paid'] == principal_amount
