@@ -19,12 +19,17 @@ def calc_monthly_payment(principal_amount, annual_interest_rate, number_of_month
 
 
 def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of_months):
-    A = calc_monthly_payment(principal_amount, annual_interest_rate, number_of_months)
-    i = annual_interest_rate / 12
-    balance = principal_amount
+    """
+    Calculate amortization schedule.
+    Monthly payments and interest accruals are rounded to the nearest cent.
+    The last monthly payment is adjusted to ensure zero closing balance.
+    """
+    A = round_to_nearest_cent(calc_monthly_payment(principal_amount, annual_interest_rate, number_of_months))
+    i = Decimal(annual_interest_rate) / 12
+    balance = Decimal(principal_amount)
     result = []
     for n in range(1, number_of_months+1):
-        monthly_accrued_interest = balance * i
+        monthly_accrued_interest = round_to_nearest_cent(balance * i)
         principal_payment = A - monthly_accrued_interest
         balance -= principal_payment
         result.append({
@@ -33,6 +38,10 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
             'monthly_accrued_interest': monthly_accrued_interest,
             'remaining_balance': balance
         })
+    last_row = result[-1]
+    if last_row['remaining_balance'] != 0:
+        last_row['monthly_payment'] += last_row['remaining_balance']
+        last_row['remaining_balance'] = Decimal(0)
     return result
 
 
@@ -47,7 +56,8 @@ def calc_monthly_summary(principal_amount, annual_interest_rate, number_of_month
 
 if __name__ == "__main__":
     import json
+    from fastapi.encoders import jsonable_encoder
 
     # four-year, $30,000 auto loan at 3% interest
     print(calc_monthly_payment(30000.0, 0.03, 48))
-    print(json.dumps(calc_amortization_schedule(30000.0, 0.03, 48), indent=2))
+    print(json.dumps(jsonable_encoder(calc_amortization_schedule(30000.0, 0.03, 48)), indent=2))

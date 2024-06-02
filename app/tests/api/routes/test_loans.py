@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from sqlmodel import Session
 from fastapi.testclient import TestClient
 
@@ -16,9 +18,9 @@ def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["amount"] == float(data['amount'])
-    assert content["annual_interest_rate"] == float(data["annual_interest_rate"])
-    assert content["loan_term"] == float(data["loan_term"])
+    assert Decimal(content["amount"]) == Decimal(data['amount'])
+    assert Decimal(content["annual_interest_rate"]) == Decimal(data["annual_interest_rate"])
+    assert content["loan_term"] == data["loan_term"]
     assert "id" in content
     assert "owner_id" in content
 
