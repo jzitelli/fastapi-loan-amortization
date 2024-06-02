@@ -40,8 +40,21 @@ def test_fetch_loans(
     )
     assert response.status_code == 200
     content = response.json()
+    assert content['count'] == 3
     assert len(content["data"]) == 3
     assert {1,2,3} == set(r['loan_term'] for r in content['data'])
+
+
+def test_fetch_loans_no_loans(client, db):
+    user = create_random_user(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/",
+        headers=authentication_token_from_email(client=client, email=user.email, db=db),
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content['count'] == 0
+    assert len(content["data"]) == 0
 
 
 def test_fetch_loan_schedule(client: TestClient, superuser_token_headers: dict[str, str], db: Session):
@@ -96,6 +109,32 @@ def test_fetch_loan_summary(client: TestClient, superuser_token_headers: dict[st
     assert response.status_code == 200
     content = response.json()
     assert set(content.keys()) == {'remaining_balance', 'aggregate_principal_paid', 'aggregate_interest_paid'}
+
+
+def test_fetch_loan_summary_loan_not_found(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    non_existing_loan_id = 999999
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{non_existing_loan_id}/summary?month=1",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Loan not found"
+
+
+def test_fetch_loan_summary_not_enough_permissions(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    loan = create_loan(db, amount=10, annual_interest_rate=0, loan_term=12)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=1",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Loan not found"
 
 
 def test_fetch_loan_summary_month_zero_is_invalid(client, superuser_token_headers, db):
