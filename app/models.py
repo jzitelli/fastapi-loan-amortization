@@ -1,3 +1,4 @@
+from decimal import Decimal
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -35,8 +36,8 @@ class UserPublic(UserBase):
 
 
 class LoanBase(SQLModel):
-    amount: float
-    annual_interest_rate: float
+    amount: Decimal # = Field(decimal_places=2)
+    annual_interest_rate: Decimal
     loan_term: int
 
 

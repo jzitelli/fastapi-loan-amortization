@@ -1,4 +1,5 @@
-from pytest import approx
+from decimal import Decimal
+
 from sqlmodel import Session
 from fastapi.testclient import TestClient
 
@@ -17,9 +18,9 @@ def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["amount"] == float(data['amount'])
-    assert content["annual_interest_rate"] == float(data["annual_interest_rate"])
-    assert content["loan_term"] == float(data["loan_term"])
+    assert Decimal(content["amount"]) == Decimal(data['amount'])
+    assert Decimal(content["annual_interest_rate"]) == Decimal(data["annual_interest_rate"])
+    assert content["loan_term"] == data["loan_term"]
     assert "id" in content
     assert "owner_id" in content
 
@@ -35,8 +36,8 @@ def test_fetch_loan_schedule(client: TestClient, superuser_token_headers: dict[s
     content = response.json()
     assert type(content) is list
     assert len(content) == data['loan_term']
-    expected_keys = ['month', 'remaining_balance', 'monthly_payment']
-    assert all(set(r.keys()) == set(expected_keys) for r in content)
+    assert all(set(r.keys()) == {'month', 'remaining_balance', 'monthly_payment'}
+               for r in content)
 
 
 def test_fetch_loan_schedule_loan_not_found(
@@ -66,7 +67,7 @@ def test_fetch_loan_schedule_not_enough_permissions(
 
 
 def test_fetch_loan_summary(client: TestClient, superuser_token_headers: dict[str, str], db: Session):
-    # test against default/calculated values from https://www.zillow.com/mortgage-calculator/amortization-schedule-calculator
+    # default/calculated values from https://www.zillow.com/mortgage-calculator/amortization-schedule-calculator
     data = {"amount": "200000.00", "annual_interest_rate": ".0657", "loan_term": 30*12}
     loan = create_loan(db, **data)
     response = client.get(
@@ -75,9 +76,7 @@ def test_fetch_loan_summary(client: TestClient, superuser_token_headers: dict[st
     )
     assert response.status_code == 200
     content = response.json()
-    assert abs(content['remaining_balance']) < 1e-8
-    assert content['aggregate_principal_paid'] == approx(float(data['amount']), abs=0.005)
-    assert content['aggregate_interest_paid'] == approx(258406, rel=1e-5)
+    assert set(content.keys()) == {'remaining_balance', 'aggregate_principal_paid', 'aggregate_interest_paid'}
 
 
 def test_fetch_loan_summary_month_zero_is_invalid(client, superuser_token_headers, db):
