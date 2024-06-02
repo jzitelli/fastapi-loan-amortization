@@ -13,14 +13,15 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
     i = annual_interest_rate / 12
     balance = principal_amount
     result = []
-    for _ in range(number_of_months):
+    for n in range(1, number_of_months+1):
         monthly_accrued_interest = balance * i
         principal_payment = A - monthly_accrued_interest
         balance -= principal_payment
         result.append({
-            'principal_payment': principal_payment,
-            'interest_due': monthly_accrued_interest,
-            'principal_balance': balance
+            'month': n,
+            'monthly_payment': A,
+            'monthly_accrued_interest': monthly_accrued_interest,
+            'remaining_balance': balance
         })
     return result
 

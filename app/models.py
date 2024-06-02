@@ -15,6 +15,13 @@ class UserCreate(UserBase):
     password: str
 
 
+# Properties to receive via API on update, all are optional
+# TODO replace email str with EmailStr when sqlmodel supports it
+class UserUpdate(UserBase):
+    email: str | None = None  # type: ignore
+    password: str | None = None
+
+
 # Database model, database table inferred from class name
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -41,6 +48,12 @@ class Loan(LoanBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="loans")
+
+
+# Properties to return via API, id is always required
+class LoanPublic(LoanBase):
+    id: int
+    owner_id: int
 
 
 # JSON payload containing access token
