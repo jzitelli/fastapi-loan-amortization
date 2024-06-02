@@ -1,3 +1,13 @@
+from decimal import Decimal, ROUND_HALF_UP
+
+
+ONE_CENT = Decimal('0.01')
+
+
+def round_to_nearest_cent(amount):
+    return Decimal(amount).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+
+
 def calc_monthly_payment(principal_amount, annual_interest_rate, number_of_months):
     # https://en.wikipedia.org/wiki/Amortization_calculator#The_formula
     P = principal_amount
@@ -24,6 +34,15 @@ def calc_amortization_schedule(principal_amount, annual_interest_rate, number_of
             'remaining_balance': balance
         })
     return result
+
+
+def calc_monthly_summary(principal_amount, annual_interest_rate, number_of_months, month):
+    schedule = calc_amortization_schedule(principal_amount, annual_interest_rate, number_of_months)
+    return {
+        'remaining_balance': schedule[month-1]['remaining_balance'],
+        'aggregate_principal_paid': principal_amount - schedule[month-1]['remaining_balance'],
+        'aggregate_interest_paid': sum(r['monthly_accrued_interest'] for r in schedule[:month])
+    }
 
 
 if __name__ == "__main__":

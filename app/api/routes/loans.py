@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Loan, LoanCreate, LoanPublic
-from app.amortization_calculator import calc_amortization_schedule
+from app.amortization_calculator import calc_amortization_schedule, calc_monthly_summary
 
 
 router = APIRouter()
@@ -49,9 +49,4 @@ def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
         raise HTTPException(status_code=404, detail="Loan not found")
     if month > loan.loan_term:
         raise HTTPException(status_code=422, detail="month number exceeds loan term")
-    schedule = calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
-    return {
-        'remaining_balance': schedule[month-1]['remaining_balance'],
-        'aggregate_principal_paid': loan.amount - schedule[month-1]['remaining_balance'],
-        'aggregate_interest_paid': sum(r['monthly_accrued_interest'] for r in schedule[:month])
-    }
+    return calc_monthly_summary(loan.amount, loan.annual_interest_rate, loan.loan_term, month)
