@@ -78,3 +78,32 @@ def test_fetch_loan_summary(client: TestClient, superuser_token_headers: dict[st
     assert abs(content['remaining_balance']) < 1e-8
     assert content['aggregate_principal_paid'] == approx(float(data['amount']), abs=0.005)
     assert content['aggregate_interest_paid'] == approx(258406, rel=1e-5)
+
+
+def test_fetch_loan_summary_month_zero_is_invalid(client, superuser_token_headers, db):
+    loan = create_loan(db, amount=10000.0, annual_interest_rate=0, loan_term=12)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=0",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 422
+
+
+def test_fetch_loan_summary_negative_month_is_invalid(client, superuser_token_headers, db):
+    loan = create_loan(db, amount=10000.0, annual_interest_rate=0, loan_term=12)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=-1",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 422
+
+
+def test_fetch_loan_summary_month_gt_loan_term_is_invalid(client, superuser_token_headers, db):
+    loan = create_loan(db, amount=10000.0, annual_interest_rate=0, loan_term=12)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=13",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 422
+    content = response.json()
+    assert content['detail'] == "month number exceeds loan term"

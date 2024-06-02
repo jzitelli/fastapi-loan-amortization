@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Loan, LoanCreate, LoanPublic
@@ -39,13 +39,16 @@ def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int)
 
 
 @router.get("/{id}/summary")
-def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int, month: int) -> Any:
+def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
+                       month: Annotated[int, Query(title="month number", gt=0)]) -> Any:
     """
     Get loan summary for a given month.
     """
     loan = session.get(Loan, id)
     if not loan or (not current_user.is_superuser and (loan.owner_id != current_user.id)):
         raise HTTPException(status_code=404, detail="Loan not found")
+    if month > loan.loan_term:
+        raise HTTPException(status_code=422, detail="month number exceeds loan term")
     schedule = calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
     return {
         'remaining_balance': schedule[month-1]['remaining_balance'],
