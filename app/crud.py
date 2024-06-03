@@ -54,6 +54,10 @@ def create_loan(*, session: Session, loan_in: LoanCreate, owner_id: int) -> Loan
 
 
 def create_loan_share(*, session: Session, loan_id: int, user_id: int):
+    statement = select(LoanShare).where(LoanShare.loan_id == loan_id, LoanShare.user_id == user_id)
+    loan_share = session.exec(statement).first()
+    if loan_share:
+        return loan_share
     db_item = LoanShare(loan_id=loan_id, user_id=user_id)
     session.add(db_item)
     session.commit()

@@ -77,7 +77,7 @@ def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
     return calc_monthly_summary(loan.amount, loan.annual_interest_rate, loan.loan_term, month)
 
 
-@router.get("/{id}/share")
+@router.put("/{id}/share")
 def share_loan(session: SessionDep, current_user: CurrentUser, id: int,
                email: Annotated[str, Query(title="user email")]) -> Any:
     """
