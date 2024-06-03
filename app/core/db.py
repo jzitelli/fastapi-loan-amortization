@@ -1,10 +1,14 @@
+from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
 from app.models import User, UserCreate, Loan, LoanShare
 
-engine = create_engine("sqlite:///database.db")
+# engine = create_engine("sqlite:///database.db")
+engine = create_engine("sqlite://",
+                       connect_args={"check_same_thread": False},
+                       poolclass=StaticPool)
 
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
