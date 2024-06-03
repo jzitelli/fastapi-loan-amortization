@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     EMAIL_TEST_USER: str = "test@example.com"
-    FIRST_SUPERUSER: str = "admin@example.com"
-    FIRST_SUPERUSER_PASSWORD: str = "changethis"
+    FIRST_SUPERUSER: str = "admin"
+    FIRST_SUPERUSER_PASSWORD: str = "ok"
 
 
 settings = Settings()  # type: ignore

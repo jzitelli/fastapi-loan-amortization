@@ -26,6 +26,54 @@ def test_create_loan(client: TestClient, superuser_token_headers: dict[str, str]
     assert "owner_id" in content
 
 
+def test_create_loan_invalid_loan_term(client, superuser_token_headers):
+    data = {"amount": "500000.00",
+            "annual_interest_rate": "0.07",
+            "loan_term": 0}
+    response = client.post(
+        f"{settings.API_V1_STR}/loans/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 422
+
+
+def test_create_loan_zero_amount_invalid(client, superuser_token_headers):
+    data = {"amount": "0.00",
+            "annual_interest_rate": "0.07",
+            "loan_term": 30*12}
+    response = client.post(
+        f"{settings.API_V1_STR}/loans/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 422
+
+
+def test_create_loan_too_many_decimal_places_invalid(client, superuser_token_headers):
+    data = {"amount": "500000.001",
+            "annual_interest_rate": "0.07",
+            "loan_term": 12}
+    response = client.post(
+        f"{settings.API_V1_STR}/loans/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 422
+
+
+def test_create_loan_invalid_interest_rate(client: TestClient, superuser_token_headers: dict[str, str]):
+    data = {"amount": "500000.00",
+            "annual_interest_rate": "-0.07",
+            "loan_term": 30*12}
+    response = client.post(
+        f"{settings.API_V1_STR}/loans/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 422
+
+
 def test_fetch_loans(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
