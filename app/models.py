@@ -36,9 +36,9 @@ class UserPublic(UserBase):
 
 
 class LoanBase(SQLModel):
-    amount: Decimal # = Field(decimal_places=2)
-    annual_interest_rate: Decimal
-    loan_term: int
+    amount: Decimal = Field(decimal_places=2, gt=0)
+    annual_interest_rate: Decimal = Field(ge=0)
+    loan_term: int = Field(gt=0)
 
 
 class LoanCreate(LoanBase):
