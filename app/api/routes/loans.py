@@ -1,6 +1,8 @@
+from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Loan, LoanCreate, LoanPublic, LoansPublic
@@ -34,8 +36,14 @@ def fetch_loans(current_user: CurrentUser) -> Any:
     return LoansPublic(data=loans, count=len(loans))
 
 
-@router.get("/{id}/schedule")
-def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
+class LoanScheduleRow(BaseModel):
+    month: int
+    monthly_payment: Decimal
+    remaining_balance: Decimal
+
+
+@router.get("/{id}/schedule", response_model=list[LoanScheduleRow])
+def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int):
     """
     Get loan schedule by ID.
     """
@@ -48,12 +56,16 @@ def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int)
                         and current_user.id not in [ls.user_id for ls in loan.shares]):
             raise HTTPException(status_code=404, detail="Loan not found")
     schedule = calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
-    for r in schedule:
-        r.pop('monthly_accrued_interest')
     return schedule
 
 
-@router.get("/{id}/summary")
+class LoanSummary(BaseModel):
+    remaining_balance: Decimal
+    aggregate_interest_paid: Decimal
+    aggregate_principal_paid: Decimal
+
+
+@router.get("/{id}/summary", response_model=LoanSummary)
 def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
                        month: Annotated[int, Query(title="month number", gt=0)]) -> Any:
     """
