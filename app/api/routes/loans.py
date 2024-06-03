@@ -40,8 +40,13 @@ def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int)
     Get loan schedule by ID.
     """
     loan = session.get(Loan, id)
-    if not loan or (not current_user.is_superuser and (loan.owner_id != current_user.id)):
-        raise HTTPException(status_code=404, detail="Loan not found")
+    if current_user.is_superuser:
+        if not loan:
+            raise HTTPException(status_code=404, detail="Loan not found")
+    else:
+        if not loan or (loan.owner_id != current_user.id
+                        and current_user.id not in [ls.user_id for ls in loan.shares]):
+            raise HTTPException(status_code=404, detail="Loan not found")
     schedule = calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
     for r in schedule:
         r.pop('monthly_accrued_interest')
@@ -55,8 +60,13 @@ def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
     Get loan summary for a given month.
     """
     loan = session.get(Loan, id)
-    if not loan or (not current_user.is_superuser and (loan.owner_id != current_user.id)):
-        raise HTTPException(status_code=404, detail="Loan not found")
+    if current_user.is_superuser:
+        if not loan:
+            raise HTTPException(status_code=404, detail="Loan not found")
+    else:
+        if not loan or (loan.owner_id != current_user.id
+                        and current_user.id not in [ls.user_id for ls in loan.shares]):
+            raise HTTPException(status_code=404, detail="Loan not found")
     if month > loan.loan_term:
         raise HTTPException(status_code=422, detail="month number exceeds loan term")
     return calc_monthly_summary(loan.amount, loan.annual_interest_rate, loan.loan_term, month)

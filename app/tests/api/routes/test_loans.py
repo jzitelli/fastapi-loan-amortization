@@ -206,3 +206,45 @@ def test_share_loan_not_enough_permissions_does_not_leak_loan_existence(
         headers=normal_user_token_headers,
     )
     assert response.status_code == 200
+
+
+def test_can_fetch_shared_loan_schedule(client, normal_user_token_headers, db):
+    owner = create_random_user(db)
+    loan = create_loan(db, user=owner, amount=1, annual_interest_rate=0, loan_term=1)
+    user = create_random_user(db)
+    unauthorized_response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/schedule",
+        headers=authentication_token_from_email(client=client, db=db, email=user.email),
+    )
+    assert unauthorized_response.status_code != 200
+    response = client.put(
+        f"{settings.API_V1_STR}/loans/{loan.id}/share?email={user.email}",
+        headers=authentication_token_from_email(client=client, db=db, email=owner.email),
+    )
+    assert response.status_code == 200
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/schedule",
+        headers=authentication_token_from_email(client=client, db=db, email=user.email),
+    )
+    assert response.status_code == 200
+
+
+def test_can_fetch_shared_loan_summary(client, normal_user_token_headers, db):
+    owner = create_random_user(db)
+    loan = create_loan(db, user=owner, amount=1, annual_interest_rate=0, loan_term=1)
+    user = create_random_user(db)
+    unauthorized_response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=1",
+        headers=authentication_token_from_email(client=client, db=db, email=user.email),
+    )
+    assert unauthorized_response.status_code != 200
+    response = client.put(
+        f"{settings.API_V1_STR}/loans/{loan.id}/share?email={user.email}",
+        headers=authentication_token_from_email(client=client, db=db, email=owner.email),
+    )
+    assert response.status_code == 200
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/summary?month=1",
+        headers=authentication_token_from_email(client=client, db=db, email=user.email),
+    )
+    assert response.status_code == 200
