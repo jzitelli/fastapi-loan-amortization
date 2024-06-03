@@ -49,12 +49,25 @@ class Loan(LoanBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="loans")
+    shares: list["LoanShare"] | None = Relationship(back_populates="loan")
+
+
+class LoanShare(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    loan_id: int = Field(default=None, foreign_key="loan.id", nullable=False)
+    user_id: int = Field(default=None, foreign_key="user.id", nullable=False)
+    loan: Loan | None = Relationship(back_populates="shares")
 
 
 # Properties to return via API, id is always required
 class LoanPublic(LoanBase):
     id: int
     owner_id: int
+
+
+class LoansPublic(SQLModel):
+    data: list[LoanPublic]
+    count: int
 
 
 # JSON payload containing access token

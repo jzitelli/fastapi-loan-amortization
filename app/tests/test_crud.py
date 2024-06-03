@@ -1,10 +1,8 @@
-import random
-import string
-from sqlmodel import Session
+from sqlmodel import Session, select
 from fastapi.encoders import jsonable_encoder
 
 from app import crud
-from app.models import User, UserCreate, Loan, LoanCreate
+from app.models import User, UserCreate, Loan, LoanCreate, LoanShare
 from app.tests.utils.utils import random_email, random_lower_string
 
 
@@ -84,3 +82,26 @@ def test_create_loan(db):
     assert loan.annual_interest_rate == loan_in.annual_interest_rate
     assert loan.loan_term == loan_in.loan_term
     assert loan.owner_id == 400
+
+
+def test_create_loan_share(db):
+    user_1 = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
+    loan_in = LoanCreate(amount='200000.00', annual_interest_rate='0.05', loan_term=30*12)
+    loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=user_1.id)
+    user_2 = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
+    db_item = crud.create_loan_share(session=db, loan_id=loan.id, user_id=user_2.id)
+    loan_share = db.get(LoanShare, db_item.id)
+    assert loan_share.loan_id == loan.id
+    assert loan_share.user_id == user_2.id
+
+
+def test_create_loan_share_is_idempotent(db):
+    user_1 = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
+    user_2 = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
+    loan_in = LoanCreate(amount=1, annual_interest_rate=0, loan_term=30*12)
+    loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=user_1.id)
+    crud.create_loan_share(session=db, loan_id=loan.id, user_id=user_2.id)
+    crud.create_loan_share(session=db, loan_id=loan.id, user_id=user_2.id)
+    statement = select(LoanShare).where(LoanShare.loan_id == loan.id, LoanShare.user_id == user_2.id)
+    results = db.exec(statement)
+    assert len(results.all()) == 1
