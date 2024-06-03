@@ -1,7 +1,6 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Loan, LoanCreate, LoanPublic, LoansPublic
@@ -27,26 +26,12 @@ def create_loan(
 
 
 @router.get("/", response_model=LoansPublic)
-def fetch_loans(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
-) -> Any:
+def fetch_loans(current_user: CurrentUser) -> Any:
     """
     Fetch all loans owned by current user.
     """
-    count_statement = (
-        select(func.count())
-        .select_from(Loan)
-        .where(Loan.owner_id == current_user.id)
-    )
-    count = session.exec(count_statement).one()
-    statement = (
-        select(Loan)
-        .where(Loan.owner_id == current_user.id)
-        .offset(skip)
-        .limit(limit)
-    )
-    loans = session.exec(statement).all()
-    return LoansPublic(data=loans, count=count)
+    loans = current_user.loans
+    return LoansPublic(data=loans, count=len(loans))
 
 
 @router.get("/{id}/schedule")
