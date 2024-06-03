@@ -164,3 +164,45 @@ def test_fetch_loan_summary_month_gt_loan_term_is_invalid(client, superuser_toke
     assert response.status_code == 422
     content = response.json()
     assert content['detail'] == "month number exceeds loan term"
+
+
+def test_share_loan(client, db):
+    owner = create_random_user(db)
+    loan = create_loan(db, user=owner, amount=1, annual_interest_rate=0, loan_term=1)
+    user = create_random_user(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/share?email={user.email}",
+        headers=authentication_token_from_email(client=client, db=db, email=owner.email),
+    )
+    assert response.status_code == 200
+
+
+def test_share_loan_does_not_leak_loan_existence(client, normal_user_token_headers, db):
+    user = create_random_user(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/99999/share?email={user.email}",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 200
+
+
+def test_share_loan_with_user_does_not_leak_user_existence(client, db):
+    owner = create_random_user(db)
+    loan = create_loan(db, user=owner, amount=1, annual_interest_rate=0, loan_term=1)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/share?email=nonexistinguser@nonexisting.com",
+        headers=authentication_token_from_email(client=client, db=db, email=owner.email),
+    )
+    assert response.status_code == 200
+
+
+def test_share_loan_not_enough_permissions_does_not_leak_loan_existence(
+            client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    owner = create_random_user(db)
+    loan = create_loan(db, user=owner, amount=1, annual_interest_rate=0, loan_term=1)
+    response = client.get(
+        f"{settings.API_V1_STR}/loans/{loan.id}/share?email={settings.FIRST_SUPERUSER}",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 200

@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from app.models import User, UserCreate, UserUpdate, Loan, LoanCreate
+from app.models import User, UserCreate, UserUpdate, Loan, LoanCreate, LoanShare
 from app.core.security import get_password_hash, verify_password
 
 
@@ -47,6 +47,14 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
 
 def create_loan(*, session: Session, loan_in: LoanCreate, owner_id: int) -> Loan:
     db_item = Loan.model_validate(loan_in, update={"owner_id": owner_id})
+    session.add(db_item)
+    session.commit()
+    session.refresh(db_item)
+    return db_item
+
+
+def create_loan_share(*, session: Session, loan_id: int, user_id: int):
+    db_item = LoanShare(loan_id=loan_id, user_id=user_id)
     session.add(db_item)
     session.commit()
     session.refresh(db_item)

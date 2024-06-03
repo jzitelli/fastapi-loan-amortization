@@ -62,6 +62,12 @@ class LoansPublic(SQLModel):
     count: int
 
 
+class LoanShare(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    loan_id: int
+    user_id: int
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
