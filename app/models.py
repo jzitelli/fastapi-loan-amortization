@@ -23,11 +23,17 @@ class UserUpdate(UserBase):
     password: str | None = None
 
 
+class LoanShare(SQLModel, table=True):
+    loan_id: int | None = Field(default=None, foreign_key="loan.id", primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
+
+
 # Database model, database table inferred from class name
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
     loans: list["Loan"] = Relationship(back_populates="owner")
+    shared_loans: list["Loan"] = Relationship(back_populates="shared_users", link_model=LoanShare)
 
 
 # Properties to return via API, id is always required
@@ -49,13 +55,7 @@ class Loan(LoanBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="loans")
-    shares: list["LoanShare"] | None = Relationship(back_populates="loan")
-
-
-class LoanShare(SQLModel, table=True):
-    loan_id: int = Field(default=None, foreign_key="loan.id", primary_key=True)
-    user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
-    loan: Loan | None = Relationship(back_populates="shares")
+    shared_users: list[User] = Relationship(back_populates="shared_loans", link_model=LoanShare)
 
 
 # Properties to return via API, id is always required

@@ -58,7 +58,7 @@ def fetch_loan_schedule(session: SessionDep, current_user: CurrentUser, id: int)
             raise HTTPException(status_code=404, detail="Loan not found")
     else:
         if not loan or (loan.owner_id != current_user.id
-                        and current_user.id not in [ls.user_id for ls in loan.shares]):
+                        and current_user.id not in [user.id for user in loan.shared_users]):
             raise HTTPException(status_code=404, detail="Loan not found")
     schedule = calc_amortization_schedule(loan.amount, loan.annual_interest_rate, loan.loan_term)
     return schedule
@@ -82,7 +82,7 @@ def fetch_loan_summary(session: SessionDep, current_user: CurrentUser, id: int,
             raise HTTPException(status_code=404, detail="Loan not found")
     else:
         if not loan or (loan.owner_id != current_user.id
-                        and current_user.id not in [ls.user_id for ls in loan.shares]):
+                        and current_user.id not in [user.id for user in loan.shared_users]):
             raise HTTPException(status_code=404, detail="Loan not found")
     if month > loan.loan_term:
         raise HTTPException(status_code=422, detail="month number exceeds loan term")
