@@ -53,9 +53,8 @@ class Loan(LoanBase, table=True):
 
 
 class LoanShare(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    loan_id: int = Field(default=None, foreign_key="loan.id", nullable=False)
-    user_id: int = Field(default=None, foreign_key="user.id", nullable=False)
+    loan_id: int = Field(default=None, foreign_key="loan.id", primary_key=True)
+    user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
     loan: Loan | None = Relationship(back_populates="shares")
 
 

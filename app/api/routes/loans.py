@@ -28,11 +28,15 @@ def create_loan(
 
 
 @router.get("/", response_model=LoansPublic)
-def fetch_loans(current_user: CurrentUser) -> Any:
+def fetch_loans(
+    session: SessionDep, current_user: CurrentUser,
+        limit: Annotated[int, Query(title="limit", gt=0, le=10000)] = 100,
+        skip: int = 0
+) -> Any:
     """
     Fetch all loans owned by current user.
     """
-    loans = current_user.loans
+    loans = current_user.loans[skip:skip+limit]
     return LoansPublic(data=loans, count=len(loans))
 
 

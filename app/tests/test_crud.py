@@ -90,7 +90,7 @@ def test_create_loan_share(db):
     loan = crud.create_loan(session=db, loan_in=loan_in, owner_id=user_1.id)
     user_2 = crud.create_user(session=db, user_create=UserCreate(email=random_email(), password=random_lower_string()))
     db_item = crud.create_loan_share(session=db, loan_id=loan.id, user_id=user_2.id)
-    loan_share = db.get(LoanShare, db_item.id)
+    loan_share = db.get(LoanShare, (db_item.loan_id, db_item.user_id))
     assert loan_share.loan_id == loan.id
     assert loan_share.user_id == user_2.id
 
