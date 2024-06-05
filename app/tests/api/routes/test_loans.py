@@ -38,6 +38,18 @@ def test_create_loan_invalid_loan_term(client, superuser_token_headers):
     assert response.status_code == 422
 
 
+def test_create_loan_exceeds_max_loan_term(client, superuser_token_headers):
+    data = {"amount": "500000.00",
+            "annual_interest_rate": "0.07",
+            "loan_term": 12*100+1}
+    response = client.post(
+        f"{settings.API_V1_STR}/loans/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 422
+
+
 def test_create_loan_zero_amount_invalid(client, superuser_token_headers):
     data = {"amount": "0.00",
             "annual_interest_rate": "0.07",
