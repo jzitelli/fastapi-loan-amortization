@@ -36,7 +36,8 @@ def fetch_loans(
     """
     Fetch all loans owned by current user.
     """
-    loans = current_user.loans[skip:skip+limit]
+    loans = session.query(Loan).filter(Loan.owner_id == current_user.id) \
+        .offset(skip).limit(limit).all()
     return LoansPublic(data=loans, count=len(loans))
 
 
